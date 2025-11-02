@@ -1,7 +1,6 @@
 import 'package:ao_1/auth/ui/widgets/header_login_widget.dart';
 import 'package:ao_1/auth/ui/widgets/login_inputs_widget.dart';
 import 'package:ao_1/auth/ui/viewModel/login_view_model.dart';
-import 'package:ao_1/contact/ui/views/list-contacts-view.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -16,20 +15,10 @@ class ContainerLoginWidget extends StatelessWidget {
           children: [
             const HeaderLoginWidget(),
             LoginInputs(
-              onLoginPressed: () {
+              onLoginPressed: () async {
                 print('Botón presionado!');
-                loginViewModel.login();
-                
-                // Si el login es exitoso, navegar
-                if (loginViewModel.isAuthenticated) {
-                  print('Navegando a contactos...');
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ListContactsView(),
-                    ),
-                  );
-                }
+                // El listener en main.dart manejará la navegación automáticamente
+                await loginViewModel.login();
               },
               emailController: loginViewModel.emailController,
               passwordController: loginViewModel.passwordController,

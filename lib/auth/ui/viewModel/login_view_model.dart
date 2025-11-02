@@ -6,9 +6,12 @@ class LoginViewModel extends ChangeNotifier {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final AuthRepository authRepository = AuthRepository();
-
+  
   bool isAuthenticated = false;
   String errorMessage = '';
+  
+  // Constructor sin async - mejor práctica: inicializar en método separado
+  LoginViewModel();
 
   Future<void> initAuth() async {
     try {
@@ -22,7 +25,7 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
-  void login() async {
+  Future<void> login() async {
     String email = emailController.text;
     String password = passwordController.text;
 
@@ -34,7 +37,7 @@ class LoginViewModel extends ChangeNotifier {
       return;
     }
 
-    bool success = authRepository.login(email: email, password: password);
+    bool success = await authRepository.login(email: email, password: password);
     print('Resultado del login: $success');
 
     if (success) {
@@ -48,8 +51,8 @@ class LoginViewModel extends ChangeNotifier {
       errorMessage = "Credenciales incorrectas";
       print('Login fallido');
     }
-
     notifyListeners();
+
   }
 
   Future<void> logout() async {
@@ -62,5 +65,13 @@ class LoginViewModel extends ChangeNotifier {
     } catch (e) {
       print('Error al hacer logout: $e');
     }
+  }
+
+  @override
+  void dispose() {
+    // Limpiar controllers para evitar memory leaks - mejor práctica
+    emailController.dispose();
+    passwordController.dispose();
+    super.dispose();
   }
 }

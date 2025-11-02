@@ -1,3 +1,4 @@
+import 'package:ao_1/auth/ui/viewModel/login_view_model.dart';
 import 'package:ao_1/contact/domain/entities/contact_entity.dart';
 import 'package:ao_1/contact/ui/viewModel/contact_view_model.dart';
 import 'package:flutter/material.dart';
@@ -18,6 +19,7 @@ class _ListContactsViewState extends State<ListContactsView> {
 
   @override
   Widget build(BuildContext context) {
+    final loginViewModel = context.read<LoginViewModel>();
     return Scaffold(
       appBar: AppBar(
         title: const Text('Contactos'),
@@ -31,10 +33,20 @@ class _ListContactsViewState extends State<ListContactsView> {
               showSearch(context: context, delegate: ContactSearchDelegate());
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.more_vert),
-            onPressed: () {
-              // Menú de opciones
+          PopupMenuButton(
+            itemBuilder: (_) {
+              return [
+                const PopupMenuItem(
+                  value: "optionLogout",
+                  child: Text("Cerrar sesión"),
+                ),
+              ];
+            },
+            onSelected: (value) {
+              if (value == "optionLogout") {
+                loginViewModel.logout();
+                // Navigator.pushNamedAndRemoveUntil(context, "/login");
+              }
             },
           ),
         ],

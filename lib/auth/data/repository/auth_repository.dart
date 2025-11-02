@@ -2,11 +2,11 @@ class AuthRepository {
   final String emailMock = "usuario";
   final String passwordMock = "123456";
 
-  bool login({required String email, required String password}) {
+  Future<bool> login({required String email, required String password}) async {
     if (email == emailMock && password == passwordMock) {
-      return true;
+      return Future.value(true);
     }
 
-    return false;
+    return Future.value(false);
   }
 }
