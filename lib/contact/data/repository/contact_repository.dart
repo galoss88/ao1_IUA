@@ -34,5 +34,40 @@ class ContactRepository {
     }
   }
 
-  
+  Future<int?> updateContact(ContactModel contact) async {
+    try {
+      final contactMap = contact.toMap();
+      final numberRawUpdate = await _database.update(
+        "contacts",
+        contactMap,
+        where: "id = ?",
+        whereArgs: [contact.id],
+      );
+      return numberRawUpdate;
+    } catch (e) {
+      debugPrint("Falló la actualización de un contacto. ${e.toString()}");
+      return null;
+    }
+  }
+
+  Future<List<ContactModel>> getAllContacts() async {
+    try {
+      final List<Map<String, dynamic>> maps = await _database.query("contacts");
+      return List.generate(maps.length, (i) {
+        return ContactModel(
+          id: maps[i]['id'] as String,
+          name: maps[i]['name'] as String,
+          lastName: maps[i]['lastName'] as String,
+          phone: maps[i]['phone'] as String,
+          email: maps[i]['email'] as String? ?? '',
+          address: maps[i]['address'] as String,
+          birthDate: DateTime.parse(maps[i]['birthDate'] as String),
+          gender: maps[i]['gender'] as String,
+        );
+      });
+    } catch (e) {
+      debugPrint("Falló la obtención de contactos. ${e.toString()}");
+      return [];
+    }
+  }
 }

@@ -27,7 +27,7 @@ class ContactModel {
       "phone": phone,
       "email": email,
       "address": address,
-      "birthDate": birthDate,
+      "birthDate": birthDate.toIso8601String(), // Convertir DateTime a String para SQLite
       "gender": gender,
     };
   }

@@ -53,6 +53,10 @@ class _ListContactsViewState extends State<ListContactsView> {
       ),
       body: Consumer<ContactViewModel>(
         builder: (context, contactViewModel, child) {
+          if (contactViewModel.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          
           if (contactViewModel.contacts.isEmpty) {
             return const Center(child: Text('No hay contactos'));
           }
@@ -74,11 +78,56 @@ class _ListContactsViewState extends State<ListContactsView> {
                   contact.phone,
                   style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green, size: 24),
-                  onPressed: () {
-                    // Solo visual
-                  },
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.blue, size: 24),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => EditContactView(contact: contact),
+                          ),
+                        );
+                      },
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red, size: 24),
+                      onPressed: () async {
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Eliminar contacto'),
+                            content: Text('¿Está seguro de eliminar a ${contact.fullName}?'),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('Cancelar'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                              ),
+                            ],
+                          ),
+                        );
+                        
+                        if (confirmed == true && mounted) {
+                          final success = await contactViewModel.removeContact(contact.id);
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(success 
+                                  ? 'Contacto eliminado exitosamente' 
+                                  : 'Error al eliminar contacto'),
+                              ),
+                            );
+                          }
+                        }
+                      },
+                    ),
+                  ],
                 ),
               );
             },
@@ -208,7 +257,7 @@ class _AddContactViewState extends State<AddContactView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () {
+            onPressed: () async {
               // Validar que todos los campos estén completos
               if (nameController.text.isEmpty ||
                   lastNameController.text.isEmpty ||
@@ -232,11 +281,24 @@ class _AddContactViewState extends State<AddContactView> {
                 gender: selectedGender,
               );
 
-              Provider.of<ContactViewModel>(
+              // Usar async para guardar en SQLite
+              final contactViewModel = Provider.of<ContactViewModel>(
                 context,
                 listen: false,
-              ).addContact(contact);
-              Navigator.pop(context);
+              );
+              final success = await contactViewModel.addContact(contact);
+              if (mounted) {
+                if (success) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Contacto agregado exitosamente')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error al agregar contacto')),
+                  );
+                }
+              }
             },
           ),
         ],
@@ -292,30 +354,179 @@ class _AddContactViewState extends State<AddContactView> {
             ),
             const SizedBox(height: 10),
 
-            Row(
-              children: [
-                Radio<String>(
-                  value: 'Femenino',
-                  groupValue: selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedGender = value!;
-                    });
-                  },
-                ),
-                const Text('Femenino'),
-                const SizedBox(width: 20),
-                Radio<String>(
-                  value: 'Masculino',
-                  groupValue: selectedGender,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedGender = value!;
-                    });
-                  },
-                ),
-                const Text('Masculino'),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Femenino', label: Text('Femenino')),
+                ButtonSegment(value: 'Masculino', label: Text('Masculino')),
               ],
+              selected: {selectedGender},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() {
+                  selectedGender = newSelection.first;
+                });
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Pantalla para editar contactos
+class EditContactView extends StatefulWidget {
+  final Contact contact;
+  
+  const EditContactView({super.key, required this.contact});
+
+  @override
+  State<EditContactView> createState() => _EditContactViewState();
+}
+
+class _EditContactViewState extends State<EditContactView> {
+  late final TextEditingController nameController;
+  late final TextEditingController lastNameController;
+  late final TextEditingController phoneController;
+  late final TextEditingController addressController;
+  late String selectedGender;
+
+  @override
+  void initState() {
+    super.initState();
+    nameController = TextEditingController(text: widget.contact.name);
+    lastNameController = TextEditingController(text: widget.contact.lastName);
+    phoneController = TextEditingController(text: widget.contact.phone);
+    addressController = TextEditingController(text: widget.contact.address);
+    selectedGender = widget.contact.gender;
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    lastNameController.dispose();
+    phoneController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Editar'),
+        backgroundColor: Colors.blue,
+        foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () async {
+              // Validar que todos los campos estén completos
+              if (nameController.text.isEmpty ||
+                  lastNameController.text.isEmpty ||
+                  phoneController.text.isEmpty ||
+                  addressController.text.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Complete todos los campos')),
+                );
+                return;
+              }
+
+              // Actualizar contacto
+              final updatedContact = Contact(
+                id: widget.contact.id,
+                name: nameController.text,
+                lastName: lastNameController.text,
+                phone: phoneController.text,
+                email: widget.contact.email, // Mantener email original
+                address: addressController.text,
+                birthDate: widget.contact.birthDate, // Mantener fecha original
+                gender: selectedGender,
+              );
+
+              final contactViewModel = Provider.of<ContactViewModel>(
+                context,
+                listen: false,
+              );
+              final success = await contactViewModel.updateContact(updatedContact);
+              if (mounted) {
+                if (success) {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Contacto actualizado exitosamente')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Error al actualizar contacto')),
+                  );
+                }
+              }
+            },
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
+                labelText: 'Nombre',
+                hintText: 'Ingrese nombre',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: lastNameController,
+              decoration: const InputDecoration(
+                labelText: 'Apellido',
+                hintText: 'Ingrese apellido',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneController,
+              decoration: const InputDecoration(
+                labelText: 'Número de teléfono',
+                hintText: '+54 --- --- ----',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: addressController,
+              decoration: const InputDecoration(
+                labelText: 'Domicilio',
+                hintText: 'Ingrese domicilio',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Género',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SegmentedButton<String>(
+              segments: const [
+                ButtonSegment(value: 'Femenino', label: Text('Femenino')),
+                ButtonSegment(value: 'Masculino', label: Text('Masculino')),
+              ],
+              selected: {selectedGender},
+              onSelectionChanged: (Set<String> newSelection) {
+                setState(() {
+                  selectedGender = newSelection.first;
+                });
+              },
             ),
           ],
         ),
