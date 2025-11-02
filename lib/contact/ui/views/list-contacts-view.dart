@@ -56,7 +56,7 @@ class _ListContactsViewState extends State<ListContactsView> {
           if (contactViewModel.isLoading) {
             return const Center(child: CircularProgressIndicator());
           }
-          
+
           if (contactViewModel.contacts.isEmpty) {
             return const Center(child: Text('No hay contactos'));
           }
@@ -66,6 +66,14 @@ class _ListContactsViewState extends State<ListContactsView> {
             itemBuilder: (context, index) {
               Contact contact = contactViewModel.contacts[index];
               return ListTile(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditContactView(contact: contact),
+                    ),
+                  );
+                },
                 leading: CircleAvatar(
                   backgroundColor: Colors.grey.shade400,
                   child: Icon(Icons.person, color: Colors.white, size: 24),
@@ -82,51 +90,55 @@ class _ListContactsViewState extends State<ListContactsView> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.edit, color: Colors.blue, size: 24),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => EditContactView(contact: contact),
-                          ),
-                        );
-                      },
+                      onPressed: () {},
+                      icon: Icon(Icons.phone, color: Colors.green),
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red, size: 24),
-                      onPressed: () async {
-                        final confirmed = await showDialog<bool>(
-                          context: context,
-                          builder: (context) => AlertDialog(
-                            title: const Text('Eliminar contacto'),
-                            content: Text('¿Está seguro de eliminar a ${contact.fullName}?'),
-                            actions: [
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, false),
-                                child: const Text('Cancelar'),
-                              ),
-                              TextButton(
-                                onPressed: () => Navigator.pop(context, true),
-                                child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-                              ),
-                            ],
-                          ),
-                        );
-                        
-                        if (confirmed == true && mounted) {
-                          final success = await contactViewModel.removeContact(contact.id);
-                          if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(success 
-                                  ? 'Contacto eliminado exitosamente' 
-                                  : 'Error al eliminar contacto'),
-                              ),
-                            );
-                          }
-                        }
-                      },
-                    ),
+                    // IconButton(
+                    //   icon: const Icon(Icons.edit, color: Colors.blue, size: 24),
+                    //   onPressed: () {
+                    //     Navigator.push(
+                    //       context,
+                    //       MaterialPageRoute(
+                    //         builder: (context) => EditContactView(contact: contact),
+                    //       ),
+                    //     );
+                    //   },
+                    // ),
+                    // IconButton(
+                    //   icon: const Icon(Icons.delete, color: Colors.red, size: 24),
+                    //   onPressed: () async {
+                    //     final confirmed = await showDialog<bool>(
+                    //       context: context,
+                    //       builder: (context) => AlertDialog(
+                    //         title: const Text('Eliminar contacto'),
+                    //         content: Text('¿Está seguro de eliminar a ${contact.fullName}?'),
+                    //         actions: [
+                    //           TextButton(
+                    //             onPressed: () => Navigator.pop(context, false),
+                    //             child: const Text('Cancelar'),
+                    //           ),
+                    //           TextButton(
+                    //             onPressed: () => Navigator.pop(context, true),
+                    //             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+                    //           ),
+                    //         ],
+                    //       ),
+                    //     );
+
+                    //     if (confirmed == true && mounted) {
+                    //       final success = await contactViewModel.removeContact(contact.id);
+                    //       if (mounted) {
+                    //         ScaffoldMessenger.of(context).showSnackBar(
+                    //           SnackBar(
+                    //             content: Text(success
+                    //               ? 'Contacto eliminado exitosamente'
+                    //               : 'Error al eliminar contacto'),
+                    //           ),
+                    //         );
+                    //       }
+                    //     }
+                    //   },
+                    // ),
                   ],
                 ),
               );
@@ -291,7 +303,9 @@ class _AddContactViewState extends State<AddContactView> {
                 if (success) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contacto agregado exitosamente')),
+                    const SnackBar(
+                      content: Text('Contacto agregado exitosamente'),
+                    ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -376,7 +390,7 @@ class _AddContactViewState extends State<AddContactView> {
 // Pantalla para editar contactos
 class EditContactView extends StatefulWidget {
   final Contact contact;
-  
+
   const EditContactView({super.key, required this.contact});
 
   @override
@@ -411,6 +425,8 @@ class _EditContactViewState extends State<EditContactView> {
 
   @override
   Widget build(BuildContext context) {
+    final contactViewModel = context.watch<ContactViewModel>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Editar'),
@@ -420,7 +436,24 @@ class _EditContactViewState extends State<EditContactView> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
+
         actions: [
+          IconButton(
+            onPressed: () async {
+              final resDelete = await contactViewModel.removeContact(
+                widget.contact.id,
+              );
+              if (resDelete && mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                  context,
+                  "/listContacts",
+                  (route) => false,
+                );
+              }
+              
+            },
+            icon: Icon(Icons.delete),
+          ),
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () async {
@@ -451,16 +484,22 @@ class _EditContactViewState extends State<EditContactView> {
                 context,
                 listen: false,
               );
-              final success = await contactViewModel.updateContact(updatedContact);
+              final success = await contactViewModel.updateContact(
+                updatedContact,
+              );
               if (mounted) {
                 if (success) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Contacto actualizado exitosamente')),
+                    const SnackBar(
+                      content: Text('Contacto actualizado exitosamente'),
+                    ),
                   );
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Error al actualizar contacto')),
+                    const SnackBar(
+                      content: Text('Error al actualizar contacto'),
+                    ),
                   );
                 }
               }
