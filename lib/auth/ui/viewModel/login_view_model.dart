@@ -10,7 +10,6 @@ class LoginViewModel extends ChangeNotifier {
   bool isAuthenticated = false;
   String errorMessage = '';
   
-  // Constructor sin async - mejor práctica: inicializar en método separado
   LoginViewModel();
 
   Future<void> initAuth() async {
@@ -42,7 +41,6 @@ class LoginViewModel extends ChangeNotifier {
 
     if (success) {
       isAuthenticated = true;
-      //guardar en shared preferences la autenticacion
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool("isAuthenticate", true);
       errorMessage = '';
@@ -69,7 +67,6 @@ class LoginViewModel extends ChangeNotifier {
 
   @override
   void dispose() {
-    // Limpiar controllers para evitar memory leaks - mejor práctica
     emailController.dispose();
     passwordController.dispose();
     super.dispose();

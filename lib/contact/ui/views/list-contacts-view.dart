@@ -29,7 +29,6 @@ class _ListContactsViewState extends State<ListContactsView> {
           IconButton(
             icon: const Icon(Icons.search),
             onPressed: () {
-              // Mostrar campo de búsqueda
               showSearch(context: context, delegate: ContactSearchDelegate());
             },
           ),
@@ -45,7 +44,6 @@ class _ListContactsViewState extends State<ListContactsView> {
             onSelected: (value) {
               if (value == "optionLogout") {
                 loginViewModel.logout();
-                // Navigator.pushNamedAndRemoveUntil(context, "/login");
               }
             },
           ),
@@ -93,52 +91,6 @@ class _ListContactsViewState extends State<ListContactsView> {
                       onPressed: () {},
                       icon: Icon(Icons.phone, color: Colors.green),
                     ),
-                    // IconButton(
-                    //   icon: const Icon(Icons.edit, color: Colors.blue, size: 24),
-                    //   onPressed: () {
-                    //     Navigator.push(
-                    //       context,
-                    //       MaterialPageRoute(
-                    //         builder: (context) => EditContactView(contact: contact),
-                    //       ),
-                    //     );
-                    //   },
-                    // ),
-                    // IconButton(
-                    //   icon: const Icon(Icons.delete, color: Colors.red, size: 24),
-                    //   onPressed: () async {
-                    //     final confirmed = await showDialog<bool>(
-                    //       context: context,
-                    //       builder: (context) => AlertDialog(
-                    //         title: const Text('Eliminar contacto'),
-                    //         content: Text('¿Está seguro de eliminar a ${contact.fullName}?'),
-                    //         actions: [
-                    //           TextButton(
-                    //             onPressed: () => Navigator.pop(context, false),
-                    //             child: const Text('Cancelar'),
-                    //           ),
-                    //           TextButton(
-                    //             onPressed: () => Navigator.pop(context, true),
-                    //             child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
-                    //           ),
-                    //         ],
-                    //       ),
-                    //     );
-
-                    //     if (confirmed == true && mounted) {
-                    //       final success = await contactViewModel.removeContact(contact.id);
-                    //       if (mounted) {
-                    //         ScaffoldMessenger.of(context).showSnackBar(
-                    //           SnackBar(
-                    //             content: Text(success
-                    //               ? 'Contacto eliminado exitosamente'
-                    //               : 'Error al eliminar contacto'),
-                    //           ),
-                    //         );
-                    //       }
-                    //     }
-                    //   },
-                    // ),
                   ],
                 ),
               );
@@ -149,7 +101,6 @@ class _ListContactsViewState extends State<ListContactsView> {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
         onPressed: () {
-          // Navegar a pantalla de agregar contacto
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddContactView()),
@@ -174,7 +125,6 @@ class ContactSearchDelegate extends SearchDelegate {
       IconButton(
         icon: const Icon(Icons.more_vert),
         onPressed: () {
-          // Menú de opciones en búsqueda
         },
       ),
     ];
@@ -223,7 +173,6 @@ class ContactSearchDelegate extends SearchDelegate {
               trailing: IconButton(
                 icon: const Icon(Icons.phone, color: Colors.green, size: 24),
                 onPressed: () {
-                  // Solo visual, sin funcionalidad extra
                 },
               ),
             );
@@ -239,7 +188,6 @@ class ContactSearchDelegate extends SearchDelegate {
   }
 }
 
-// Pantalla simple para agregar contactos
 class AddContactView extends StatefulWidget {
   const AddContactView({super.key});
 
@@ -270,7 +218,6 @@ class _AddContactViewState extends State<AddContactView> {
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () async {
-              // Validar que todos los campos estén completos
               if (nameController.text.isEmpty ||
                   lastNameController.text.isEmpty ||
                   phoneController.text.isEmpty ||
@@ -281,37 +228,37 @@ class _AddContactViewState extends State<AddContactView> {
                 return;
               }
 
-              // Guardar contacto
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+              
               final contact = Contact(
                 id: DateTime.now().millisecondsSinceEpoch.toString(),
                 name: nameController.text,
                 lastName: lastNameController.text,
                 phone: phoneController.text,
-                email: '', // No se usa en este formulario
+                email: '',
                 address: addressController.text,
                 birthDate: DateTime.now(),
                 gender: selectedGender,
               );
 
-              // Usar async para guardar en SQLite
               final contactViewModel = Provider.of<ContactViewModel>(
                 context,
                 listen: false,
               );
               final success = await contactViewModel.addContact(contact);
-              if (mounted) {
-                if (success) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Contacto agregado exitosamente'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Error al agregar contacto')),
-                  );
-                }
+              if (!mounted) return;
+              if (success) {
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Contacto agregado exitosamente'),
+                  ),
+                );
+              } else {
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(content: Text('Error al agregar contacto')),
+                );
               }
             },
           ),
@@ -358,7 +305,6 @@ class _AddContactViewState extends State<AddContactView> {
             ),
             const SizedBox(height: 20),
 
-            // Sección de Género
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -387,7 +333,6 @@ class _AddContactViewState extends State<AddContactView> {
   }
 }
 
-// Pantalla para editar contactos
 class EditContactView extends StatefulWidget {
   final Contact contact;
 
@@ -440,24 +385,23 @@ class _EditContactViewState extends State<EditContactView> {
         actions: [
           IconButton(
             onPressed: () async {
+              final navigator = Navigator.of(context);
               final resDelete = await contactViewModel.removeContact(
                 widget.contact.id,
               );
-              if (resDelete && mounted) {
-                Navigator.pushNamedAndRemoveUntil(
-                  context,
+              if (!mounted) return;
+              if (resDelete) {
+                navigator.pushNamedAndRemoveUntil(
                   "/listContacts",
                   (route) => false,
                 );
               }
-              
             },
             icon: Icon(Icons.delete),
           ),
           IconButton(
             icon: const Icon(Icons.check),
             onPressed: () async {
-              // Validar que todos los campos estén completos
               if (nameController.text.isEmpty ||
                   lastNameController.text.isEmpty ||
                   phoneController.text.isEmpty ||
@@ -468,15 +412,17 @@ class _EditContactViewState extends State<EditContactView> {
                 return;
               }
 
-              // Actualizar contacto
+              final navigator = Navigator.of(context);
+              final scaffoldMessenger = ScaffoldMessenger.of(context);
+
               final updatedContact = Contact(
                 id: widget.contact.id,
                 name: nameController.text,
                 lastName: lastNameController.text,
                 phone: phoneController.text,
-                email: widget.contact.email, // Mantener email original
+                email: widget.contact.email,
                 address: addressController.text,
-                birthDate: widget.contact.birthDate, // Mantener fecha original
+                birthDate: widget.contact.birthDate,
                 gender: selectedGender,
               );
 
@@ -487,21 +433,20 @@ class _EditContactViewState extends State<EditContactView> {
               final success = await contactViewModel.updateContact(
                 updatedContact,
               );
-              if (mounted) {
-                if (success) {
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Contacto actualizado exitosamente'),
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Error al actualizar contacto'),
-                    ),
-                  );
-                }
+              if (!mounted) return;
+              if (success) {
+                navigator.pop();
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Contacto actualizado exitosamente'),
+                  ),
+                );
+              } else {
+                scaffoldMessenger.showSnackBar(
+                  const SnackBar(
+                    content: Text('Error al actualizar contacto'),
+                  ),
+                );
               }
             },
           ),
