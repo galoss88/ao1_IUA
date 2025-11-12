@@ -65,10 +65,4 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
-  @override
-  void dispose() {
-    emailController.dispose();
-    passwordController.dispose();
-    super.dispose();
-  }
 }
