@@ -13,7 +13,6 @@ class ContactViewModel with ChangeNotifier {
     loadContacts();
   }
 
-  // Convertir ContactModel (data layer) a Contact (entity)
   Contact _modelToEntity(ContactModel model) {
     return Contact(
       id: model.id,
@@ -27,7 +26,6 @@ class ContactViewModel with ChangeNotifier {
     );
   }
 
-  // Convertir Contact (entity) a ContactModel (data layer)
   ContactModel _entityToModel(Contact entity) {
     return ContactModel(
       id: entity.id,
@@ -41,11 +39,10 @@ class ContactViewModel with ChangeNotifier {
     );
   }
 
-  // LISTADO: Cargar contactos desde SQLite
   Future<void> loadContacts() async {
     isLoading = true;
     notifyListeners();
-    
+
     try {
       final database = await DatabaseConfig.database;
       final repository = ContactRepository(database: database);
@@ -59,14 +56,13 @@ class ContactViewModel with ChangeNotifier {
     }
   }
 
-  // ALTA: Agregar contacto con SQLite
   Future<bool> addContact(Contact newContact) async {
     try {
       final database = await DatabaseConfig.database;
       final repository = ContactRepository(database: database);
       final contactModel = _entityToModel(newContact);
       final result = await repository.addContact(contactModel);
-      
+
       if (result != null && result > 0) {
         contacts.add(newContact);
         notifyListeners();
@@ -79,7 +75,6 @@ class ContactViewModel with ChangeNotifier {
     }
   }
 
-  // BAJA: Eliminar contacto con SQLite
   Future<bool> removeContact(String contactId) async {
     try {
       final contact = contacts.firstWhere((c) => c.id == contactId);
@@ -87,7 +82,7 @@ class ContactViewModel with ChangeNotifier {
       final repository = ContactRepository(database: database);
       final contactModel = _entityToModel(contact);
       final result = await repository.removeContact(contactModel);
-      
+
       if (result != null && result > 0) {
         contacts.removeWhere((contact) => contact.id == contactId);
         notifyListeners();
@@ -100,14 +95,13 @@ class ContactViewModel with ChangeNotifier {
     }
   }
 
-  // MODIFICACIÓN: Actualizar contacto con SQLite
   Future<bool> updateContact(Contact updatedContact) async {
     try {
       final database = await DatabaseConfig.database;
       final repository = ContactRepository(database: database);
       final contactModel = _entityToModel(updatedContact);
       final result = await repository.updateContact(contactModel);
-      
+
       if (result != null && result > 0) {
         final index = contacts.indexWhere((c) => c.id == updatedContact.id);
         if (index != -1) {
@@ -132,12 +126,12 @@ class ContactViewModel with ChangeNotifier {
     if (searchText.isEmpty) {
       return contacts;
     }
-    
+
     return contacts.where((contact) {
       String fullName = contact.fullName.toLowerCase();
       String phone = contact.phone.toLowerCase();
       String search = searchText.toLowerCase();
-      
+
       return fullName.contains(search) || phone.contains(search);
     }).toList();
   }
