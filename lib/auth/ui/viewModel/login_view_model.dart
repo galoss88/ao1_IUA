@@ -61,7 +61,7 @@ class LoginViewModel extends ChangeNotifier {
       await prefs.remove("isAuthenticate");
       notifyListeners();
     } catch (e) {
-      print('Error al hacer logout: $e');
+      debugPrint('Error al hacer logout: $e');
     }
   }
 
