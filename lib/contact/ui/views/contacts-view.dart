@@ -1,6 +1,6 @@
 import 'package:ao_1/auth/ui/viewModel/login_view_model.dart';
 import 'package:ao_1/contact/domain/entities/contact_entity.dart';
-import 'package:ao_1/contact/ui/viewModel/contact_view_model.dart';
+import 'package:ao_1/contact/ui/viewModel/contacts_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
