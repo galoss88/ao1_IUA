@@ -28,7 +28,7 @@ class LoginViewModel extends ChangeNotifier {
     String email = emailController.text;
     String password = passwordController.text;
 
-    print('Intentando login con: $email y $password');
+    debugPrint('Intentando login con: $email y $password');
 
     if (email.isEmpty || password.isEmpty) {
       errorMessage = "Complete todos los campos";
@@ -37,17 +37,17 @@ class LoginViewModel extends ChangeNotifier {
     }
 
     bool success = await authRepository.login(email: email, password: password);
-    print('Resultado del login: $success');
+    debugPrint('Resultado del login: $success');
 
     if (success) {
       isAuthenticated = true;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool("isAuthenticate", true);
       errorMessage = '';
-      print('Login exitoso!');
+      debugPrint('Login exitoso!');
     } else {
       errorMessage = "Credenciales incorrectas";
-      print('Login fallido');
+      debugPrint('Login fallido');
     }
     notifyListeners();
 
