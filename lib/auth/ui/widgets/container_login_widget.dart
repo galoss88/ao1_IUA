@@ -16,8 +16,7 @@ class ContainerLoginWidget extends StatelessWidget {
             const HeaderLoginWidget(),
             LoginInputs(
               onLoginPressed: () async {
-                print('Botón presionado!');
-                // El listener en main.dart manejará la navegación automáticamente
+                print('Botón presionado!');                
                 await loginViewModel.login();
               },
               emailController: loginViewModel.emailController,
