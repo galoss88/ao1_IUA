@@ -117,22 +117,22 @@ class ContactViewModel with ChangeNotifier {
     }
   }
 
-  void setSearchText(String text) {
-    searchText = text;
-    notifyListeners();
-  }
+  // void setSearchText(String text) {
+  //   searchText = text;
+  //   notifyListeners();
+  // }
 
-  List<Contact> get filteredContacts {
-    if (searchText.isEmpty) {
-      return contacts;
-    }
+  // List<Contact> get filteredContacts {
+  //   if (searchText.isEmpty) {
+  //     return contacts;
+  //   }
 
-    return contacts.where((contact) {
-      String fullName = contact.fullName.toLowerCase();
-      String phone = contact.phone.toLowerCase();
-      String search = searchText.toLowerCase();
+  //   return contacts.where((contact) {
+  //     String fullName = contact.fullName.toLowerCase();
+  //     String phone = contact.phone.toLowerCase();
+  //     String search = searchText.toLowerCase();
 
-      return fullName.contains(search) || phone.contains(search);
-    }).toList();
-  }
+  //     return fullName.contains(search) || phone.contains(search);
+  //   }).toList();
+  // }
 }
