@@ -46,4 +46,14 @@ class ContactRepository {
       return false;
     }
   }
+
+  Future<bool> deleteContact(int id) async {
+    try {
+      await _dio.delete('/api/contacto/delete/$id');
+      return true;
+    } on DioException catch (e) {
+      debugPrint('deleteContact error: ${e.message}');
+      return false;
+    }
+  }
 }

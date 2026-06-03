@@ -101,9 +101,19 @@ class _ListContactsViewState extends State<ListContactsView> {
                   contact.telefono,
                   style: TextStyle(color: Colors.grey.shade600),
                 ),
-                trailing: IconButton(
-                  icon: const Icon(Icons.phone, color: Colors.green),
-                  onPressed: () {},
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.phone, color: Colors.green),
+                      onPressed: () {},
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete_outline, color: Colors.red),
+                      onPressed: () =>
+                          _confirmDelete(context, contactViewModel, contact),
+                    ),
+                  ],
                 ),
               );
             },
@@ -119,6 +129,42 @@ class _ListContactsViewState extends State<ListContactsView> {
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
+      ),
+    );
+  }
+
+  Future<void> _confirmDelete(
+    BuildContext context,
+    ContactViewModel vm,
+    Contact contact,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Eliminar contacto'),
+        content: Text('¿Seguro que querés eliminar a ${contact.fullName}?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Eliminar', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true) return;
+
+    final ok = await vm.removeContact(contact.id);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(
+          ok ? 'Contacto eliminado' : 'Error al eliminar el contacto',
+        ),
       ),
     );
   }
