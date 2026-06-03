@@ -69,11 +69,26 @@ class _ListContactsViewState extends State<ListContactsView> {
             itemBuilder: (context, index) {
               final contact = contactViewModel.contacts[index];
               return ListTile(
-                onTap: () {
-                  Navigator.push(
-                    context,
+                onTap: () async {
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+
+                  final fresh =
+                      await contactViewModel.getContactById(contact.id);
+                  if (!mounted) return;
+
+                  if (fresh == null) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                        content: Text('No se pudo cargar el contacto'),
+                      ),
+                    );
+                    return;
+                  }
+
+                  navigator.push(
                     MaterialPageRoute(
-                      builder: (_) => EditContactView(contact: contact),
+                      builder: (_) => EditContactView(contact: fresh),
                     ),
                   );
                 },

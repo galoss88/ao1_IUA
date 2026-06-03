@@ -62,6 +62,15 @@ class ContactViewModel with ChangeNotifier {
     }
   }
 
+  Future<Contact?> getContactById(int id) async {
+    try {
+      return await _repository.getContactById(id);
+    } catch (e) {
+      debugPrint('getContactById error: $e');
+      return null;
+    }
+  }
+
   Future<bool> removeContact(int contactId) async {
     contacts.removeWhere((c) => c.id == contactId);
     notifyListeners();
