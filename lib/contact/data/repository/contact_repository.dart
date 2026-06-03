@@ -1,73 +1,49 @@
-import 'package:ao_1/contact/data/models/contact_model.dart';
-import 'package:flutter/widgets.dart';
-import 'package:sqflite/sqflite.dart';
+import 'package:ao_1/contact/domain/entities/contact_entity.dart';
+import 'package:ao_1/core/dio_client.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 class ContactRepository {
-  final Database _database;
-  ContactRepository({required Database database}) : _database = database;
+  final Dio _dio = DioClient.instance;
 
-  Future<int?> addContact(ContactModel contact) async {
+  Future<List<Contact>> getAllContacts() async {
     try {
-      final contactInserToDb = contact.toMap();
-      final contactInsert = await _database.insert(
-        "contacts",
-        contactInserToDb,
-      );
-      return contactInsert;
-    } catch (e) {
-      debugPrint("Falló la insercion de un contacto. ${e.toString()}");
-      return null;
-    }
-  }
-
-  Future<int?> removeContact(ContactModel contact) async {
-    try {
-      final numberRawDelete = await _database.delete(
-        "contacts",
-        where: "id = ?",
-        whereArgs: [contact.id],
-      );
-      return numberRawDelete;
-    } catch (e) {
-      debugPrint("Falló la eliminacion de un contacto. ${e.toString()}");
-      return null;
-    }
-  }
-
-  Future<int?> updateContact(ContactModel contact) async {
-    try {
-      final contactMap = contact.toMap();
-      final numberRawUpdate = await _database.update(
-        "contacts",
-        contactMap,
-        where: "id = ?",
-        whereArgs: [contact.id],
-      );
-      return numberRawUpdate;
-    } catch (e) {
-      debugPrint("Falló la actualización de un contacto. ${e.toString()}");
-      return null;
-    }
-  }
-
-  Future<List<ContactModel>> getAllContacts() async {
-    try {
-      final List<Map<String, dynamic>> maps = await _database.query("contacts");
-      return List.generate(maps.length, (i) {
-        return ContactModel(
-          id: maps[i]['id'] as String,
-          name: maps[i]['name'] as String,
-          lastName: maps[i]['lastName'] as String,
-          phone: maps[i]['phone'] as String,
-          email: maps[i]['email'] as String? ?? '',
-          address: maps[i]['address'] as String,
-          birthDate: DateTime.parse(maps[i]['birthDate'] as String),
-          gender: maps[i]['gender'] as String,
-        );
-      });
-    } catch (e) {
-      debugPrint("Falló la obtención de contactos. ${e.toString()}");
+      final response = await _dio.get('/minimal/contactos');
+      final List data = response.data as List;
+      return data.map((e) => Contact.fromJson(e as Map<String, dynamic>)).toList();
+    } on DioException catch (e) {
+      debugPrint('getAllContacts error: ${e.message}');
       return [];
+    }
+  }
+
+  Future<Contact?> getContactById(int id) async {
+    try {
+      final response = await _dio.get('/api/contacto/$id');
+      return Contact.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      debugPrint('getContactById error: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<Contact?> addContact(Contact contact) async {
+    try {
+      final response = await _dio.post('/api/contacto/add', data: contact.toJson());
+      return Contact.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      debugPrint('addContact error: ${e.message}');
+      return null;
+    }
+  }
+
+  Future<bool> updateContact(int id, Contact contact) async {
+    try {
+      await _dio.put('/api/contacto/edit/$id', data: contact.toJson());
+      return true;
+    } on DioException catch (e) {
+      debugPrint('updateContact error: ${e.message}');
+      return false;
     }
   }
 }

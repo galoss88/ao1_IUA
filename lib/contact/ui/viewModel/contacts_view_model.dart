@@ -1,138 +1,70 @@
-import 'package:ao_1/contact/data/models/contact_model.dart';
 import 'package:ao_1/contact/data/repository/contact_repository.dart';
 import 'package:ao_1/contact/domain/entities/contact_entity.dart';
-import 'package:ao_1/core/database_config.dart';
 import 'package:flutter/material.dart';
 
 class ContactViewModel with ChangeNotifier {
+  final ContactRepository _repository = ContactRepository();
+
   List<Contact> contacts = [];
-  String searchText = '';
   bool isLoading = false;
+  String errorMessage = '';
 
   ContactViewModel() {
     loadContacts();
   }
 
-  Contact _modelToEntity(ContactModel model) {
-    return Contact(
-      id: model.id,
-      name: model.name,
-      lastName: model.lastName,
-      phone: model.phone,
-      email: model.email,
-      address: model.address,
-      birthDate: model.birthDate,
-      gender: model.gender,
-    );
-  }
-
-  ContactModel _entityToModel(Contact entity) {
-    return ContactModel(
-      id: entity.id,
-      name: entity.name,
-      lastName: entity.lastName,
-      phone: entity.phone,
-      email: entity.email,
-      address: entity.address,
-      birthDate: entity.birthDate,
-      gender: entity.gender,
-    );
-  }
-
   Future<void> loadContacts() async {
     isLoading = true;
+    errorMessage = '';
     notifyListeners();
 
     try {
-      final database = await DatabaseConfig.database;
-      final repository = ContactRepository(database: database);
-      final contactModels = await repository.getAllContacts();
-      contacts = contactModels.map((model) => _modelToEntity(model)).toList();
+      contacts = await _repository.getAllContacts();
     } catch (e) {
-      debugPrint("Error al cargar contactos: $e");
+      errorMessage = 'Error al cargar contactos';
+      debugPrint('loadContacts error: $e');
     } finally {
       isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<bool> addContact(Contact newContact) async {
+  Future<bool> addContact(Contact contact) async {
     try {
-      final database = await DatabaseConfig.database;
-      final repository = ContactRepository(database: database);
-      final contactModel = _entityToModel(newContact);
-      final result = await repository.addContact(contactModel);
-
-      if (result != null && result > 0) {
-        contacts.add(newContact);
+      final created = await _repository.addContact(contact);
+      if (created != null) {
+        contacts.add(created);
         notifyListeners();
         return true;
       }
       return false;
     } catch (e) {
-      debugPrint("Error al agregar contacto: $e");
+      debugPrint('addContact error: $e');
       return false;
     }
   }
 
-  Future<bool> removeContact(String contactId) async {
+  Future<bool> updateContact(Contact contact) async {
     try {
-      final contact = contacts.firstWhere((c) => c.id == contactId);
-      final database = await DatabaseConfig.database;
-      final repository = ContactRepository(database: database);
-      final contactModel = _entityToModel(contact);
-      final result = await repository.removeContact(contactModel);
-
-      if (result != null && result > 0) {
-        contacts.removeWhere((contact) => contact.id == contactId);
-        notifyListeners();
-        return true;
-      }
-      return false;
-    } catch (e) {
-      debugPrint("Error al eliminar contacto: $e");
-      return false;
-    }
-  }
-
-  Future<bool> updateContact(Contact updatedContact) async {
-    try {
-      final database = await DatabaseConfig.database;
-      final repository = ContactRepository(database: database);
-      final contactModel = _entityToModel(updatedContact);
-      final result = await repository.updateContact(contactModel);
-
-      if (result != null && result > 0) {
-        final index = contacts.indexWhere((c) => c.id == updatedContact.id);
+      final success = await _repository.updateContact(contact.id, contact);
+      if (success) {
+        final index = contacts.indexWhere((c) => c.id == contact.id);
         if (index != -1) {
-          contacts[index] = updatedContact;
+          contacts[index] = contact;
           notifyListeners();
-          return true;
         }
+        return true;
       }
       return false;
     } catch (e) {
-      debugPrint("Error al actualizar contacto: $e");
+      debugPrint('updateContact error: $e');
       return false;
     }
   }
 
-  // void setSearchText(String text) {
-  //   searchText = text;
-  //   notifyListeners();
-  // }
-
-  // List<Contact> get filteredContacts {
-  //   if (searchText.isEmpty) {
-  //     return contacts;
-  //   }
-
-  //   return contacts.where((contact) {
-  //     String fullName = contact.fullName.toLowerCase();
-  //     String phone = contact.phone.toLowerCase();
-  //     String search = searchText.toLowerCase();
-
-  //     return fullName.contains(search) || phone.contains(search);
-  //   }).toList();
-  // }
+  Future<bool> removeContact(int contactId) async {
+    contacts.removeWhere((c) => c.id == contactId);
+    notifyListeners();
+    return true;
+  }
 }

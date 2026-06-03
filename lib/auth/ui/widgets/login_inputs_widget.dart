@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 
 class LoginInputs extends StatelessWidget {
   final VoidCallback? onLoginPressed;
-  final TextEditingController emailController;
+  final TextEditingController userNameController;
   final TextEditingController passwordController;
-  
+
   const LoginInputs({
-    super.key, 
+    super.key,
     this.onLoginPressed,
-    required this.emailController,
+    required this.userNameController,
     required this.passwordController,
   });
 
@@ -22,9 +22,9 @@ class LoginInputs extends StatelessWidget {
         const SizedBox(height: 5),
 
         TextField(
-          controller: emailController,
+          controller: userNameController,
           decoration: InputDecoration(
-            hintText: "Ingrese email",
+            hintText: "Ingrese usuario",
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey.shade300),

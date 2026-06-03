@@ -50,3 +50,6 @@ app.*.map.json
 .codex/
 .cursor/
 .cline/
+
+# Local AI tooling
+.claude/

@@ -13,11 +13,6 @@ class ListContactsView extends StatefulWidget {
 
 class _ListContactsViewState extends State<ListContactsView> {
   @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
     final loginViewModel = context.read<LoginViewModel>();
     return Scaffold(
@@ -33,16 +28,14 @@ class _ListContactsViewState extends State<ListContactsView> {
             },
           ),
           PopupMenuButton(
-            itemBuilder: (_) {
-              return [
-                const PopupMenuItem(
-                  value: "optionLogout",
-                  child: Text("Cerrar sesión"),
-                ),
-              ];
-            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: 'optionLogout',
+                child: Text('Cerrar sesión'),
+              ),
+            ],
             onSelected: (value) {
-              if (value == "optionLogout") {
+              if (value == 'optionLogout') {
                 loginViewModel.logout();
               }
             },
@@ -56,42 +49,46 @@ class _ListContactsViewState extends State<ListContactsView> {
           }
 
           if (contactViewModel.contacts.isEmpty) {
-            return const Center(child: Text('No hay contactos'));
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('No hay contactos'),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: contactViewModel.loadContacts,
+                    child: const Text('Reintentar'),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(
             itemCount: contactViewModel.contacts.length,
             itemBuilder: (context, index) {
-              Contact contact = contactViewModel.contacts[index];
+              final contact = contactViewModel.contacts[index];
               return ListTile(
                 onTap: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => EditContactView(contact: contact),
+                      builder: (_) => EditContactView(contact: contact),
                     ),
                   );
                 },
                 leading: CircleAvatar(
                   backgroundColor: Colors.grey.shade400,
-                  child: Icon(Icons.person, color: Colors.white, size: 24),
+                  child: const Icon(Icons.person, color: Colors.white, size: 24),
                 ),
-                title: Text(
-                  contact.fullName,
-                  style: const TextStyle(fontSize: 16),
-                ),
+                title: Text(contact.fullName),
                 subtitle: Text(
-                  contact.phone,
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
+                  contact.telefono,
+                  style: TextStyle(color: Colors.grey.shade600),
                 ),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.phone, color: Colors.green),
-                    ),
-                  ],
+                trailing: IconButton(
+                  icon: const Icon(Icons.phone, color: Colors.green),
+                  onPressed: () {},
                 ),
               );
             },
@@ -103,7 +100,7 @@ class _ListContactsViewState extends State<ListContactsView> {
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => const AddContactView()),
+            MaterialPageRoute(builder: (_) => const AddContactView()),
           );
         },
         child: const Icon(Icons.add, color: Colors.white),
@@ -114,39 +111,28 @@ class _ListContactsViewState extends State<ListContactsView> {
 
 class ContactSearchDelegate extends SearchDelegate {
   @override
-  List<Widget> buildActions(BuildContext context) {
-    return [
-      IconButton(
-        icon: const Icon(Icons.clear),
-        onPressed: () {
-          query = '';
-        },
-      ),
-      IconButton(
-        icon: const Icon(Icons.more_vert),
-        onPressed: () {
-        },
-      ),
-    ];
-  }
+  List<Widget> buildActions(BuildContext context) => [
+        IconButton(icon: const Icon(Icons.clear), onPressed: () => query = ''),
+      ];
 
   @override
-  Widget buildLeading(BuildContext context) {
-    return IconButton(
-      icon: const Icon(Icons.arrow_back),
-      onPressed: () {
-        close(context, null);
-      },
-    );
-  }
+  Widget buildLeading(BuildContext context) => IconButton(
+        icon: const Icon(Icons.arrow_back),
+        onPressed: () => close(context, null),
+      );
 
   @override
-  Widget buildResults(BuildContext context) {
+  Widget buildResults(BuildContext context) => _buildList(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) => _buildList(context);
+
+  Widget _buildList(BuildContext context) {
     return Consumer<ContactViewModel>(
-      builder: (context, contactViewModel, child) {
-        List<Contact> results = contactViewModel.contacts.where((contact) {
-          return contact.fullName.toLowerCase().contains(query.toLowerCase()) ||
-              contact.phone.contains(query);
+      builder: (context, vm, _) {
+        final results = vm.contacts.where((c) {
+          return c.fullName.toLowerCase().contains(query.toLowerCase()) ||
+              c.telefono.contains(query);
         }).toList();
 
         if (results.isEmpty) {
@@ -156,35 +142,19 @@ class ContactSearchDelegate extends SearchDelegate {
         return ListView.builder(
           itemCount: results.length,
           itemBuilder: (context, index) {
-            Contact contact = results[index];
+            final contact = results[index];
             return ListTile(
               leading: CircleAvatar(
                 backgroundColor: Colors.grey.shade400,
-                child: Icon(Icons.person, color: Colors.white, size: 24),
+                child: const Icon(Icons.person, color: Colors.white, size: 24),
               ),
-              title: Text(
-                contact.fullName,
-                style: const TextStyle(fontSize: 16),
-              ),
-              subtitle: Text(
-                contact.phone,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-              ),
-              trailing: IconButton(
-                icon: const Icon(Icons.phone, color: Colors.green, size: 24),
-                onPressed: () {
-                },
-              ),
+              title: Text(contact.fullName),
+              subtitle: Text(contact.telefono),
             );
           },
         );
       },
     );
-  }
-
-  @override
-  Widget buildSuggestions(BuildContext context) {
-    return buildResults(context);
   }
 }
 
@@ -196,18 +166,25 @@ class AddContactView extends StatefulWidget {
 }
 
 class _AddContactViewState extends State<AddContactView> {
-  final nameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final phoneController = TextEditingController();
-  final addressController = TextEditingController();
+  final nombreController = TextEditingController();
+  final apellidoController = TextEditingController();
+  final telefonoController = TextEditingController();
+  final emailController = TextEditingController();
 
-  String selectedGender = 'Femenino';
+  @override
+  void dispose() {
+    nombreController.dispose();
+    apellidoController.dispose();
+    telefonoController.dispose();
+    emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Agregar'),
+        title: const Text('Agregar contacto'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(
@@ -217,50 +194,7 @@ class _AddContactViewState extends State<AddContactView> {
         actions: [
           IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () async {
-              if (nameController.text.isEmpty ||
-                  lastNameController.text.isEmpty ||
-                  phoneController.text.isEmpty ||
-                  addressController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Complete todos los campos')),
-                );
-                return;
-              }
-
-              final navigator = Navigator.of(context);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-              
-              final contact = Contact(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
-                name: nameController.text,
-                lastName: lastNameController.text,
-                phone: phoneController.text,
-                email: '',
-                address: addressController.text,
-                birthDate: DateTime.now(),
-                gender: selectedGender,
-              );
-
-              final contactViewModel = Provider.of<ContactViewModel>(
-                context,
-                listen: false,
-              );
-              final success = await contactViewModel.addContact(contact);
-              if (!mounted) return;
-              if (success) {
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Contacto agregado exitosamente'),
-                  ),
-                );
-              } else {
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(content: Text('Error al agregar contacto')),
-                );
-              }
-            },
+            onPressed: () => _submit(context),
           ),
         ],
       ),
@@ -269,67 +203,79 @@ class _AddContactViewState extends State<AddContactView> {
         child: Column(
           children: [
             TextField(
-              controller: nameController,
+              controller: nombreController,
               decoration: const InputDecoration(
                 labelText: 'Nombre',
-                hintText: 'Ingrese nombre',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: lastNameController,
+              controller: apellidoController,
               decoration: const InputDecoration(
                 labelText: 'Apellido',
-                hintText: 'Ingrese apellido',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: phoneController,
+              controller: telefonoController,
+              keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'Número de teléfono',
-                hintText: '+54 --- --- ----',
+                labelText: 'Teléfono',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: addressController,
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'Domicilio',
-                hintText: 'Ingrese domicilio',
+                labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 20),
-
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Género',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'Femenino', label: Text('Femenino')),
-                ButtonSegment(value: 'Masculino', label: Text('Masculino')),
-              ],
-              selected: {selectedGender},
-              onSelectionChanged: (Set<String> newSelection) {
-                setState(() {
-                  selectedGender = newSelection.first;
-                });
-              },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _submit(BuildContext context) async {
+    if (nombreController.text.isEmpty ||
+        apellidoController.text.isEmpty ||
+        telefonoController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Complete los campos obligatorios')),
+      );
+      return;
+    }
+
+    final contact = Contact(
+      id: 0,
+      nombre: nombreController.text.trim(),
+      apellido: apellidoController.text.trim(),
+      telefono: telefonoController.text.trim(),
+      email: emailController.text.trim(),
+    );
+
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final vm = Provider.of<ContactViewModel>(context, listen: false);
+
+    final success = await vm.addContact(contact);
+    if (!mounted) return;
+
+    if (success) {
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Contacto agregado exitosamente')),
+      );
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Error al agregar contacto')),
+      );
+    }
   }
 }
 
@@ -343,112 +289,44 @@ class EditContactView extends StatefulWidget {
 }
 
 class _EditContactViewState extends State<EditContactView> {
-  late final TextEditingController nameController;
-  late final TextEditingController lastNameController;
-  late final TextEditingController phoneController;
-  late final TextEditingController addressController;
-  late String selectedGender;
+  late final TextEditingController nombreController;
+  late final TextEditingController apellidoController;
+  late final TextEditingController telefonoController;
+  late final TextEditingController emailController;
 
   @override
   void initState() {
     super.initState();
-    nameController = TextEditingController(text: widget.contact.name);
-    lastNameController = TextEditingController(text: widget.contact.lastName);
-    phoneController = TextEditingController(text: widget.contact.phone);
-    addressController = TextEditingController(text: widget.contact.address);
-    selectedGender = widget.contact.gender;
+    nombreController = TextEditingController(text: widget.contact.nombre);
+    apellidoController = TextEditingController(text: widget.contact.apellido);
+    telefonoController = TextEditingController(text: widget.contact.telefono);
+    emailController = TextEditingController(text: widget.contact.email);
   }
 
   @override
   void dispose() {
-    nameController.dispose();
-    lastNameController.dispose();
-    phoneController.dispose();
-    addressController.dispose();
+    nombreController.dispose();
+    apellidoController.dispose();
+    telefonoController.dispose();
+    emailController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final contactViewModel = context.watch<ContactViewModel>();
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Editar'),
+        title: const Text('Editar contacto'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
-
         actions: [
           IconButton(
-            onPressed: () async {
-              final navigator = Navigator.of(context);
-              final resDelete = await contactViewModel.removeContact(
-                widget.contact.id,
-              );
-              if (!mounted) return;
-              if (resDelete) {
-                navigator.pushNamedAndRemoveUntil(
-                  "/listContacts",
-                  (route) => false,
-                );
-              }
-            },
-            icon: Icon(Icons.delete),
-          ),
-          IconButton(
             icon: const Icon(Icons.check),
-            onPressed: () async {
-              if (nameController.text.isEmpty ||
-                  lastNameController.text.isEmpty ||
-                  phoneController.text.isEmpty ||
-                  addressController.text.isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Complete todos los campos')),
-                );
-                return;
-              }
-
-              final navigator = Navigator.of(context);
-              final scaffoldMessenger = ScaffoldMessenger.of(context);
-
-              final updatedContact = Contact(
-                id: widget.contact.id,
-                name: nameController.text,
-                lastName: lastNameController.text,
-                phone: phoneController.text,
-                email: widget.contact.email,
-                address: addressController.text,
-                birthDate: widget.contact.birthDate,
-                gender: selectedGender,
-              );
-
-              final contactViewModel = Provider.of<ContactViewModel>(
-                context,
-                listen: false,
-              );
-              final success = await contactViewModel.updateContact(
-                updatedContact,
-              );
-              if (!mounted) return;
-              if (success) {
-                navigator.pop();
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Contacto actualizado exitosamente'),
-                  ),
-                );
-              } else {
-                scaffoldMessenger.showSnackBar(
-                  const SnackBar(
-                    content: Text('Error al actualizar contacto'),
-                  ),
-                );
-              }
-            },
+            onPressed: () => _submit(context),
           ),
         ],
       ),
@@ -457,64 +335,78 @@ class _EditContactViewState extends State<EditContactView> {
         child: Column(
           children: [
             TextField(
-              controller: nameController,
+              controller: nombreController,
               decoration: const InputDecoration(
                 labelText: 'Nombre',
-                hintText: 'Ingrese nombre',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: lastNameController,
+              controller: apellidoController,
               decoration: const InputDecoration(
                 labelText: 'Apellido',
-                hintText: 'Ingrese apellido',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: phoneController,
+              controller: telefonoController,
+              keyboardType: TextInputType.phone,
               decoration: const InputDecoration(
-                labelText: 'Número de teléfono',
-                hintText: '+54 --- --- ----',
+                labelText: 'Teléfono',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 16),
             TextField(
-              controller: addressController,
+              controller: emailController,
+              keyboardType: TextInputType.emailAddress,
               decoration: const InputDecoration(
-                labelText: 'Domicilio',
-                hintText: 'Ingrese domicilio',
+                labelText: 'Email',
                 border: OutlineInputBorder(),
               ),
-            ),
-            const SizedBox(height: 20),
-            const Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Género',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-              ),
-            ),
-            const SizedBox(height: 10),
-            SegmentedButton<String>(
-              segments: const [
-                ButtonSegment(value: 'Femenino', label: Text('Femenino')),
-                ButtonSegment(value: 'Masculino', label: Text('Masculino')),
-              ],
-              selected: {selectedGender},
-              onSelectionChanged: (Set<String> newSelection) {
-                setState(() {
-                  selectedGender = newSelection.first;
-                });
-              },
             ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _submit(BuildContext context) async {
+    if (nombreController.text.isEmpty ||
+        apellidoController.text.isEmpty ||
+        telefonoController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Complete los campos obligatorios')),
+      );
+      return;
+    }
+
+    final updated = Contact(
+      id: widget.contact.id,
+      nombre: nombreController.text.trim(),
+      apellido: apellidoController.text.trim(),
+      telefono: telefonoController.text.trim(),
+      email: emailController.text.trim(),
+    );
+
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final vm = Provider.of<ContactViewModel>(context, listen: false);
+
+    final success = await vm.updateContact(updated);
+    if (!mounted) return;
+
+    if (success) {
+      navigator.pop();
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Contacto actualizado exitosamente')),
+      );
+    } else {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Error al actualizar contacto')),
+      );
+    }
   }
 }

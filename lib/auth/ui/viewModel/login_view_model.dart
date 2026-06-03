@@ -3,20 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginViewModel extends ChangeNotifier {
-  final emailController = TextEditingController();
+  final userNameController = TextEditingController();
   final passwordController = TextEditingController();
   final AuthRepository authRepository = AuthRepository();
-  
+
   bool isAuthenticated = false;
+  bool isLoading = false;
   String errorMessage = '';
-  
+
   LoginViewModel();
 
   Future<void> initAuth() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isAuthenticateShared = prefs.getBool("isAuthenticate");
-      isAuthenticated = isAuthenticateShared ?? false;
+      final token = prefs.getString('jwt_token');
+      isAuthenticated = token != null && token.isNotEmpty;
       notifyListeners();
     } catch (e) {
       isAuthenticated = false;
@@ -25,44 +26,55 @@ class LoginViewModel extends ChangeNotifier {
   }
 
   Future<void> login() async {
-    String email = emailController.text;
-    String password = passwordController.text;
+    final userName = userNameController.text.trim();
+    final password = passwordController.text;
 
-    debugPrint('Intentando login con: $email y $password');
-
-    if (email.isEmpty || password.isEmpty) {
-      errorMessage = "Complete todos los campos";
+    if (userName.isEmpty || password.isEmpty) {
+      errorMessage = 'Complete todos los campos';
       notifyListeners();
       return;
     }
 
-    bool success = await authRepository.login(email: email, password: password);
-    debugPrint('Resultado del login: $success');
+    isLoading = true;
+    errorMessage = '';
+    notifyListeners();
 
+    final success = await authRepository.login(userName: userName, password: password);
+
+    isLoading = false;
     if (success) {
       isAuthenticated = true;
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool("isAuthenticate", true);
-      errorMessage = '';
-      debugPrint('Login exitoso!');
+      await prefs.setBool('isAuthenticate', true);
     } else {
-      errorMessage = "Credenciales incorrectas";
-      debugPrint('Login fallido');
+      errorMessage = 'Credenciales incorrectas';
     }
     notifyListeners();
+  }
 
+  Future<bool> register({required String userName, required String password}) async {
+    isLoading = true;
+    errorMessage = '';
+    notifyListeners();
+
+    final error = await authRepository.register(userName: userName, password: password);
+
+    isLoading = false;
+    if (error != null) errorMessage = error;
+    notifyListeners();
+    return error == null;
   }
 
   Future<void> logout() async {
     try {
+      await authRepository.logout();
       isAuthenticated = false;
       errorMessage = '';
       final prefs = await SharedPreferences.getInstance();
-      await prefs.remove("isAuthenticate");
+      await prefs.remove('isAuthenticate');
       notifyListeners();
     } catch (e) {
       debugPrint('Error al hacer logout: $e');
     }
   }
-
 }

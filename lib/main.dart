@@ -10,8 +10,8 @@ void main() {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => ContactViewModel()),
-        ChangeNotifierProvider(create: (context) => LoginViewModel()),
+        ChangeNotifierProvider(create: (_) => LoginViewModel()),
+        ChangeNotifierProvider(create: (_) => ContactViewModel()),
       ],
       child: const MainApp(),
     ),
@@ -26,8 +26,8 @@ class MainApp extends StatelessWidget {
     return MaterialApp(
       home: const SafeArea(child: AuthWrapper()),
       routes: {
-        "/login": (_) => const SafeArea(child: LoginView()),
-        "/listContacts": (_) => const SafeArea(child: ListContactsView()),
+        '/login': (_) => const SafeArea(child: LoginView()),
+        '/listContacts': (_) => const SafeArea(child: ListContactsView()),
       },
     );
   }

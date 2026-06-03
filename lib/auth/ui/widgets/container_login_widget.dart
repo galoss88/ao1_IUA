@@ -16,10 +16,9 @@ class ContainerLoginWidget extends StatelessWidget {
             const HeaderLoginWidget(),
             LoginInputs(
               onLoginPressed: () async {
-                print('Botón presionado!');                
                 await loginViewModel.login();
               },
-              emailController: loginViewModel.emailController,
+              userNameController: loginViewModel.userNameController,
               passwordController: loginViewModel.passwordController,
             ),
           ],

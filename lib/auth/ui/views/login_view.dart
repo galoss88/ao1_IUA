@@ -1,4 +1,5 @@
 import 'package:ao_1/auth/ui/viewModel/login_view_model.dart';
+import 'package:ao_1/auth/ui/views/register_view.dart';
 import 'package:ao_1/auth/ui/widgets/container_login_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +14,6 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
-    // Usar el LoginViewModel del MultiProvider, no crear uno nuevo
     return Consumer<LoginViewModel>(
       builder: (context, loginViewModel, child) {
         return Scaffold(
@@ -37,6 +37,16 @@ class _LoginViewState extends State<LoginView> {
                       textAlign: TextAlign.center,
                     ),
                   ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterView()),
+                    );
+                  },
+                  child: const Text('¿No tenés cuenta? Registrate'),
+                ),
+                const SizedBox(height: 8),
               ],
             ),
           ),
