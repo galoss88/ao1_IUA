@@ -25,7 +25,6 @@ class AuthRepository {
     }
   }
 
-  /// Devuelve null si el registro fue exitoso, o el mensaje de error real si falló.
   Future<String?> register({required String userName, required String password}) async {
     try {
       await _dio.post('/api/auth/register', data: {
